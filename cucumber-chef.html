@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+
+<!--
+  Google HTML5 slide template
+
+  Authors: Luke Mahé (code)
+           Marcin Wichary (code and design)
+           
+           Dominic Mazzoni (browser compatibility)
+           Charles Chen (ChromeVox support)
+
+  URL: http://code.google.com/p/html5slides/
+-->
+
+    <title>CucumberでChefの腕前を試す</title>
+
+    <script src='js/slides.js'></script>
+
+    <style>
+    /* Your individual styles here, or just use inline styles if that’s
+       what you want. */
+
+    .slides.template-default > article:not(.nobackground):not(.biglogo) {
+      background: url(http://yungsang.com/images/yungsang135.jpg) 0px 0px no-repeat !important;
+      background-color: white !important;
+    } 
+
+    .slides > article {
+      font-family: "Meiryo", "MS PGothic", "MS UI Gothic", "Hiragino Kaku Gothic Pro", Osaka, Verdana, Helvetica, Arial, sans-serif !important;
+      font-size: 28px !important;
+    }
+
+    article h1 {
+      margin-top: 240px;
+      padding: 0;
+      text-align: center;
+      font-size: 52px;
+    }
+
+    section article h3 {
+      margin-left: 60px;
+      margin-bottom: 70px;
+    }
+    section.layout-faux-widescreen article h3 {
+      margin-left: -40px;
+      margin-bottom: 20px;
+    }
+
+    article h3::before {
+      content: '＜ ';
+    }
+
+    ol.linenums li::before {
+      content: '';
+    }
+    ol.linenums li {
+      margin-bottom: 0;
+    }
+
+    section .source {
+      left: auto !important;
+      right: 0;
+      padding-right: 60px !important;
+    }
+    section.layout-faux-widescreen .source {
+      padding-right: 160px !important;
+    }
+
+    ul, dl {
+      clear: both;
+      margin: 5px 0 0 .75em !important;
+    }
+    dt {
+      float: left;
+      margin-bottom: 0.5em;
+      width: 230px;
+    }
+    dt::before {
+     content: '·';
+     margin-left: -.75em;
+     position: absolute;
+    }
+    dd {
+      float: left;
+      margin-left: 0;
+      margin-bottom: 0.5em;
+      width: 525px;
+    }
+
+    li.no-style::before {
+      content: '';
+    }
+
+    pre * {
+      font-family: 'Droid Sans Mono', 'Courier New', monospace !important;
+    }
+
+    pre.lang-sh, pre.lang-html {
+      margin: 0;
+    }
+
+    article.fill img {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    </style>
+  </head>
+
+  <body style='display: none'>
+
+    <section class='slides layout-faux-widescreen template-default'>
+
+      <!-- Your slides (<article>s) go here. Delete or comment out the
+           slides below. -->
+
+      <!--article class='biglogo'>
+      </article-->
+
+      <article class="nobackground">
+        <h1>
+          CucumberでChefの腕前を試す<br/>
+          <br/>
+        </h1>
+        <p style="text-align: right;">
+          <img src="http://yungsang.com/images/yungsang135.jpg" alt="YungSang"/><br/>
+          YungSang
+        </p>
+        <div class="source">
+          February 5, 2013
+        </div>
+      </article>
+
+      <!--article>
+        <h3>自己紹介</h3>
+        <dl class="build">
+          <dt>なぜ YungSang？</dt>
+          <dd>本名をゴニョゴニョしてから<b>韓国音読み</b></dd>
+          <dt>韓国人なの？</dt>
+          <dd><b>(ll-ω-)｡oO(違うし)</b></dd>
+          <dt>なぜ リス？</dt>
+          <dd><b>リスが好き！</b>良い写真が撮れたから</dd>
+        </dl>
+        <ul class="build">
+          <li>最初はネットワーク系のＣプログラマ</li>
+          <li>1995年、Web系プログラマに転向</li>
+          <li>2000年に渡米</li>
+          <li>趣味：SNSの徘徊、ハッキング</li>
+          <li>オープンソースへのコミット、各種ユーティリティ作成</li>
+        </ul>
+      </article-->
+
+      <article>
+        <h3>目次</h3>
+        <ul>
+          <li>Cucumber って？</li>
+          <li>振舞駆動開発（BDD）って？</li>
+          <li>Cucumber-Chef って？</li>
+          <li>もろもろインストール</li>
+          <li>Cucumber-Chef のセットアップ</li>
+          <li>Hello World!</li>
+          <li>その他のコマンド／ツール</li>
+        </ul>
+      </article>
+
+      <article>
+        <h3>
+          Cucumber って？
+        </h3>
+        <ul class="build">
+          <li><a href="http://ja.wikipedia.org/wiki/%E3%83%93%E3%83%98%E3%82%A4%E3%83%93%E3%82%A2%E9%A7%86%E5%8B%95%E9%96%8B%E7%99%BA" target="_blank">振舞駆動開発（Behavior Driven Development; BDD）</a> に基づいた受け入れテストを行う為のツール</li>
+          <li><a href="http://www.ruby-lang.org/" target="_blank">Ruby</a> で書かれているが、テストする対象は縛られない。</li>
+          <li>Ruby のライブラリ／ツールを利用すれば、ブラウザをエミュレートしてサイトの動作テストも可能</li>
+          <li><a href="https://github.com/cucumber/cucumber/wiki/Gherkin" target="_blank">Gherkin</a> と呼ばれる<b>自然言語に近い形の文法</b>でテストケースを記述</li>
+          <li><b>Feature(Background、Scenario)</b> と呼ばれるテストケースと、<b>Step</b> と呼ばれる実際のテストコードの対でテストが実行される。</li>
+          <li>あくまで外部から見た振舞いを記述するものなので、<b>実装に関わる内部の変数等は記述しない</b>ことに<a href="http://www.elabs.se/blog/15-you-re-cuking-it-wrong" target="_blank">要注意</a></li>
+        </ul>
+        <div class="source">
+          <a href="http://cukes.info/" target="_blank">http://cukes.info/</a>
+        </div>
+      </article>
+
+      <article>
+        <h3>
+          振舞駆動開発（BDD）って？
+        </h3>
+        <ul class="build">
+          <li>振舞駆動開発は、テスト駆動開発から派生したものである。</li>
+          <li>しかし、個々の実装（プログラム）レベルのテストではなく、結果としての<b>振る舞い（仕様）を記述</b>、テストするところが大きく異なる。</li>
+          <li>その為、外部仕様、要求仕様（スペック）に適合するようにプログラムを作成するという<b>より自然な開発の流れ</b>になる。</li>
+          <li>また、コード（実装）を<b>リファクタリングした際にも、同じテストがそのまま使用可能</b>となる。</li>
+          <li>記述したテストケースは、開発完了後の仕様確認、受け入れテストとしても利用可能である。</li>
+        </ul>
+        <div class="source">
+          <a href="http://ja.wikipedia.org/wiki/%E3%83%93%E3%83%98%E3%82%A4%E3%83%93%E3%82%A2%E9%A7%86%E5%8B%95%E9%96%8B%E7%99%BA" target="_blank">http://ja.wikipedia.org/wiki/ビヘイビア駆動開発</a>
+        </div>
+      </article>
+
+      <article>
+        <h3>
+          Cucumber-Chef って？
+        </h3>
+        <ul class="build">
+          <li>Cucumber を <b>Chef に特化</b>し、かつ、その<b>テスト環境の構築から実際のテストまで</b>を一元、自動化するツール</li>
+          <li>現在はテスト環境として <b>EC2</b> のみを利用しているが、次期バージョン（v2.1.0）から <b>Vagrant（VirtualBox）</b>も選択可能</li>
+          <li>テスト環境の構築やインフラに対する<a href="https://github.com/Atalanta/cucumber-chef/tree/master/lib/cucumber/chef/steps" target="_blank">基本的なテストコード（Step）</a>が予め組み込まれており、それに合わせたテストケース（Scenario）を書くことにより、より速く簡単にテストが可能</li>
+          <li>
+            同様のものに <a href="http://www.opscode.com/" target="_blank">Opscode</a> が提供する <a href="https://github.com/opscode/test-kitchen">Test-Kitchen</a> がある。<br/>
+            Cookbook 単体のテストに特化されており、Vagrant を使用して<b>様々なOS環境下での動作確認</b>が可能である。<br/>
+            ただし、<b>予め完成された Cookbook、Chef 環境を前提</b>としており、BDD としての利用や手軽に始められる感じではない。
+          </li>
+        </ul>
+        <div class="source">
+          <a href="http://www.cucumber-chef.org/" target="_blank">http://www.cucumber-chef.org/</a>
+        </div>
+      </article>
+
+      <article>
+        <h3>もろもろインストール</h3>
+        <ul class="build">
+          <li>
+            Ruby / <a href="https://rvm.io/" target="_blank">RVM</a>（Ruby 環境の管理ツール）のインストール
+            <pre class="lang-sh" style="font-size: 18px; line-height: 1.2em;">
+$ \curl -L https://get.rvm.io | bash -s stable
+$ source ~/.rvm/scripts/rvm
+$ rvm requirements
+$ brew install autoconf automake apple-gcc42 ... # 環境によって異なる
+$ rvm install 1.9.3
+</pre>
+          </li>
+          <li>
+            <a href="http://gembundler.com/" target="_blank">Bundler</a>（アプリ環境の隔離化ツール）のインストール
+            <pre class="lang-sh">
+$ gem install bundler
+</pre>
+          </li>
+          <li>Cucumber-Chef のインストール
+            <pre class="lang-sh" style="font-size: 18px; line-height: 1.2em;">
+$ mkdir &lt;project-home&gt;
+$ cd &lt;project-home&gt;
+$ rvm --rvmrc --create 1.9.3
+$ vi Gemfile
+</pre>
+<pre class="lang-ruby" style="margin: 0; font-size: 18px; line-height: 1.2em;">
+source :rubygems
+gem "cucumber-chef",
+  :git => "git://github.com/Atalanta/cucumber-chef",
+  :tag => "v2.1.0.rc.15"  # v2.1.0.rc.12~14 はバグあり
+gem "vagrant"  # v2.1.0.rc.12 以降、Vagrant は別途インストールが必要
+</pre>
+            <pre class="lang-sh">
+$ bundle --path=vendor/bundle
+</pre>
+          </li>
+        </ul>
+        <div class="source">
+          <a href="https://github.com/Atalanta/cucumber-chef/wiki" target="_blank">https://github.com/Atalanta/cucumber-chef/wiki</a>
+        </div>
+      </article>
+
+      <article>
+        <h3>Cucumber-Chef のセットアップ</h3>
+        <ul class="build">
+          <li>Cucumber-Chef のコンフィグレーションファイルの作成
+            <pre class="lang-sh">
+$ mkdir .chef  # ダミー
+$ bundle exec cucumber-chef init
+$ vi .cucumber-chef/config.rb
+</pre>
+<pre class="lang-ruby" style="margin: 0; font-size: 18px; line-height: 1.2em;">
+provider                        <b>:vagrant</b>
+librarian_chef                  false
+lxc_user                        "root"
+lab_user                        "ubuntu"
+prerelease                      <b>true</b>
+
+&lt;中略&gt;
+
+# TODO
+<b>vagrant[:identity_file]      = "~/.vagrant.d/insecure_private_key"</b>
+</pre>
+          </li>
+          <li>Knife のコンフィグレーションファイルの作成（ダミー）
+            <pre class="lang-sh">
+$ mkdir -p .cucumber-chef/vagrant
+$ touch .cucumber-chef/vagrant/knife.rb
+$ bundle exec cucumber-chef displayconfig  # 設定の確認
+</pre>
+          </li>
+        </ul>
+        <div class="source">
+          <a href="https://gist.github.com/YungSang/4703835" target="_blank">https://gist.github.com/YungSang/4703835</a>
+        </div>
+      </article>
+
+      <article>
+        <h3>Cucumber-Chef のセットアップ</h3>
+        <ul class="build">
+          <li>Vagrant のコンフィグレーションファイルの作成
+            <pre class="lang-sh">
+$ bundle exec vagrant init <b>precise64</b>
+$ vi Vagrantfile
+</pre>
+<pre class="lang-ruby" style="margin: 0; font-size: 18px; line-height: 1.2em;">
+  config.vm.box       = "<b>precise64</b>"
+  <b>config.vm.box_url = "http://files.vagrantup.com/precise64.box"</b>
+
+  config.vm.customize ["modifyvm", :id, "--memory", 512]  # メモリは適宜
+
+&lt;中略&gt;
+
+  <b>config.vm.forward_port 4000, 4000
+  config.vm.forward_port 4040, 4040
+  config.vm.forward_port 8787, 8787</b>
+</pre>
+          </li>
+          <li>Chef Server の構築
+            <pre class="lang-sh">
+$ bundle exec cucumber-chef setup
+</pre>
+            <p style="margin: 0; font-size: 20px;">
+              ※ 環境にもよるが完了まで10分以上かかる
+            </p>
+          </li>
+        </ul>
+        <div class="source">
+          <a href="https://gist.github.com/YungSang/4703835" target="_blank">https://gist.github.com/YungSang/4703835</a>
+        </div>
+      </article>
+
+      <article>
+        <h3>Cucumber-Chef のセットアップ</h3>
+        <ul>
+          <li>LXC コンテナ（Node）の環境設定
+            <pre class="lang-sh">
+$ bundle exec cc-knife cookbook create chef-client
+$ bundle exec cucumber-chef create devopserver
+$ vi features/devopserver/devopserver.feature
+</pre>
+<pre class="lang-ruby" style="margin: 0; font-size: 15px; line-height: 1.2em;">
+@devopserver
+Feature: Perform test driven infrastructure with Cucumber-Chef
+  In order to learn how to develop test driven infrastructure
+  As an infrastructure developer
+  I want to better understand how to use Cucumber-Chef
+
+  Background:
+    * I have a server called "devopserver"
+    * "devopserver" is running "ubuntu" "precise"
+    * "devopserver" has been provisioned
+    * the following cookbooks have been uploaded:
+      | cookbook | cookbook_path |
+      | chef-client | ./cookbooks |
+    * the "chef-client::<b>default</b>" recipe has been added to the "devopserver" run list
+    * the chef-client has been run on "devopserver"
+    * I ssh to "devopserver" with the following credentials:
+      | username | keyfile |
+      | <b>$lxc$</b> | <b>$lxc$</b> |
+
+&lt;以下略&gt;
+</pre>
+          </li>
+        </ul>
+        <div class="source">
+          <a href="https://gist.github.com/YungSang/4703835" target="_blank">https://gist.github.com/YungSang/4703835</a>
+        </div>
+      </article>
+
+      <article>
+        <h3>Cucumber-Chef のセットアップ</h3>
+        <ul>
+          <li>LXC コンテナ（Node）の構築と Cucumber の動作確認
+            <pre class="lang-sh">
+$ bundle exec cucumber﻿
+</pre>
+<pre class="lang-html" style="margin: 0; font-size: 15px; line-height: 1.2em;">
+  * cucumber-chef v2.1.0.rc.15
+<samp class="blue">@devopserver</samp>
+Feature: Perform test driven infrastructure with Cucumber-Chef
+  In order to learn how to develop test driven infrastructure
+  As an infrastructure developer
+  I want to better understand how to use Cucumber-Chef
+
+  Background:                                                                        # features/devopserver/devopserver.feature:7
+    <samp class="green">* I have a server called "devopserver"</samp>                                           # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/provision_steps.rb:22
+    <samp class="green">* "devopserver" is running "ubuntu" "precise"</samp>                                    # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/provision_steps.rb:26
+    <samp class="green">* "devopserver" has been provisioned</samp>                                             # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/provision_steps.rb:46
+    <samp class="green">* the following cookbooks have been uploaded:</samp>                                    # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/chef_steps.rb:57
+      | <samp class="green">cookbook</samp>    | <samp class="green">cookbook_path</samp> |
+      | <samp class="green">chef-client</samp> | <samp class="green">./cookbooks</samp>   |
+    <samp class="green">* the "chef-client::default" recipe has been added to the "devopserver" run list</samp> # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/provision_steps.rb:54
+    <samp class="green">* the chef-client has been run on "devopserver"</samp>                                  # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/provision_steps.rb:62
+    <samp class="green">* I ssh to "devopserver" with the following credentials:</samp>                         # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/ssh_steps.rb:28
+      | <samp class="green">username</samp> | <samp class="green">keyfile</samp> |
+      | <samp class="green">$lxc$</samp>    | <samp class="green">$lxc$</samp>   |
+
+&lt;以下略&gt;
+</pre>
+            <p style="margin: 0; font-size: 20px;">
+              ※ 初回起動時のみ precise のルートファイルシステムを作成するため時間が掛かる<br/>
+              ※ 空のレシピの為、正常の場合でも最後のシナリオは失敗する
+            </p>
+          </li>
+        </ul>
+        <div class="source">
+          <a href="https://gist.github.com/YungSang/4703835" target="_blank">https://gist.github.com/YungSang/4703835</a>
+        </div>
+      </article>
+
+      <article>
+        <h3>Cucumber-Chef のセットアップ</h3>
+        <ul>
+          <li>LXC コンテナ（Node）の破棄
+            <pre class="lang-sh">
+$ bundle exec cucumber﻿-chef destroy devopserver
+</pre>
+            <p style="margin: 0; font-size: 20px;">
+              ※ コンテナは破棄されるが、precise のルートファイルシステムは残る。
+            </p>
+          </li>
+        </ul>
+      </article>
+
+      <article>
+        <h3>
+          Hello World!
+        </h3>
+        <ul>
+          <li>
+            Cucumber Scenario の作成<br/>
+            <pre class="lang-sh">
+$ vi features/devopserver/devopserver.feature
+</pre>
+<pre class="lang-ruby" style="margin: 0; font-size: 15px; line-height: 1.15em;">
+@devopserver
+Feature: Perform test driven infrastructure with Cucumber-Chef
+  In order to learn how to develop test driven infrastructure
+  As an infrastructure developer
+  I want to better understand how to use Cucumber-Chef
+
+  Background:
+    * I have a server called "devopserver"
+    * "devopserver" is running "ubuntu" "precise"
+    * "devopserver" has been provisioned
+    * the following cookbooks have been uploaded:
+      | cookbook | cookbook_path |
+      | <b>hello-world</b> | ./cookbooks |
+    * the "<b>hello-world</b>::default" recipe has been added to the "devopserver" run list
+    * the chef-client has been run on "devopserver"
+    * I ssh to "devopserver" with the following credentials:
+      | username | keyfile |
+      | $lxc$ | $lxc$ |
+<b>
+  Scenario: Say "Hello World!"
+    Then file "/tmp/hello-world" should exist
+    And file "/tmp/hello-world" should be owned by "root"
+    And file "/tmp/hello-world" should contain
+      """
+      Hello World!
+      """</b>
+</pre>
+          </li>
+        </ul>
+        <div class="source">
+          <a href="http://yungsang.com/vagrant/#9" target="_blank">http://yungsang.com/vagrant/#9</a>
+        </div>
+      </article>
+
+      <article>
+        <h3>
+          Hello World!
+        </h3>
+         <ul class="build">
+          <li>Cookbook の作成<br/>
+            <pre class="lang-sh">
+$ mkdir -p cookbooks/<b>hello-world</b>
+$ touch cookbooks/hello-world/<b>README.md</b>
+$ vi cookbooks/hello-world/<b>metadata.rb</b>
+</pre>
+<pre class="lang-ruby" style="margin: 0;">
+name    "Hello World"
+version "0.1.0"
+</pre>
+          </li>
+          <li>レシピの作成<br/>
+            <pre class="lang-sh">
+$ mkdir -p cookbooks/hello-world/recipes
+$ vi cookbooks/hello-world/recipes/default.rb
+</pre>
+<pre class="lang-ruby" style="margin: 0;">
+<b>file</b> "/tmp/hello-world" do
+  content "Hello World!\n"
+  owner "root"
+  group "root"
+  mode 0755
+  action :create
+end</pre>
+          </li>
+        </ul>
+        <div class="source">
+          <a href="http://yungsang.com/vagrant/#6" target="_blank">http://yungsang.com/vagrant/#6</a>
+        </div>
+      </article>
+
+      <article>
+        <h3>Hello World!</h3>
+        <ul>
+          <li>Cucumber の実行
+            <pre class="lang-sh" style="ont-size: 16px; line-height: 1.2em;">
+$ bundle exec cucumber﻿
+</pre>
+<pre class="lang-html" style="margin: 0; font-size: 14px; line-height: 1em;">
+  * cucumber-chef v2.1.0.rc.15
+<samp class="blue">@devopserver</samp>
+Feature: Perform test driven infrastructure with Cucumber-Chef
+  In order to learn how to develop test driven infrastructure
+  As an infrastructure developer
+  I want to better understand how to use Cucumber-Chef
+
+  Background:                                                                        # features/devopserver/devopserver.feature:7
+    <samp class="green">* I have a server called "devopserver"</samp>                                           # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/provision_steps.rb:22
+    <samp class="green">* "devopserver" is running "ubuntu" "precise"</samp>                                    # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/provision_steps.rb:26
+    <samp class="green">* "devopserver" has been provisioned</samp>                                             # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/provision_steps.rb:46
+    <samp class="green">* the following cookbooks have been uploaded:</samp>                                    # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/chef_steps.rb:57
+      | <samp class="green">cookbook</samp>    | <samp class="green">cookbook_path</samp> |
+      | <samp class="green">hello-world</samp> | <samp class="green">./cookbooks</samp>   |
+    <samp class="green">* the "hello-world::default" recipe has been added to the "devopserver" run list</samp> # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/provision_steps.rb:54
+    <samp class="green">* the chef-client has been run on "devopserver"</samp>                                  # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/provision_steps.rb:62
+    <samp class="green">* I ssh to "devopserver" with the following credentials:</samp>                         # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/ssh_steps.rb:28
+      | <samp class="green">username</samp> | <samp class="green">keyfile</samp> |
+      | <samp class="green">$lxc$</samp>    | <samp class="green">$lxc$</samp>   |
+
+  Scenario: Say "Hello World!"                                                       # features/devopserver/devopserver.feature:20
+hello-world
+regular file
+    <samp class="green">Then file "/tmp/hello-world" should exist</samp>                                        # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/ssh_steps.rb:88
+root:root
+    <samp class="green">And file "/tmp/hello-world" should be owned by "root"</samp>                            # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/ssh_steps.rb:122
+Hello World!
+    <samp class="green">And file "/tmp/hello-world" should contain</samp>                                       # vendor/bundle/ruby/1.9.1/bundler/gems/cucumber-chef-0f94e45a0de5/lib/cucumber/chef/steps/ssh_steps.rb:131
+      <samp class="green">"""
+      Hello World!
+      """</samp>
+
+1 scenario (<samp class="green">1 passed</samp>)
+10 steps (<samp class="green">10 passed</samp>)
+0m11.055s
+</pre>
+          </li>
+        </ul>
+      </article>
+
+      <article>
+        <h3>
+          その他のコマンド／ツール
+        </h3>
+         <ul class="build">
+          <li>
+            作業の中断<br/>
+            <pre class="lang-sh">
+$ bundle exec cucumber﻿-chef <b>halt</b>
+</pre>
+          </li>
+          <li>
+            作業の再開<br/>
+            <pre class="lang-sh">
+$ bundle exec cucumber﻿-chef <b>up</b>
+</pre>
+          </li>
+          <li>
+            環境の破棄<br/>
+            <pre class="lang-sh">
+$ bundle exec cucumber﻿-chef <b>destroy</b>
+</pre>
+          </li>
+          <li>
+            Cookbook のチェック：<a href="http://acrmp.github.com/foodcritic/" target="_blank">Foodcritic</a>
+            <pre class="lang-sh">
+$ gem install foodcritic
+$ foodcritic cookbooks/hello-world
+</pre>
+          </li>
+          <li>
+            Cookbook の取得／管理：<a href="https://github.com/applicationsonline/librarian" target="_blank">Librarian</a>
+          </li>
+          <li>
+            Cookbook のデプロイ：<a href="http://wiki.opscode.com/display/chef/Spiceweasel" target="_blank">Spiceweasel</a>
+            <p style="margin: 0; font-size: 20px;">
+              ※ Bundler による実行環境下ではそのままでは動作しない
+            </p>
+          </li>
+        </ul>
+      </article>
+
+      <article>
+        <h3>
+          Thank you!
+        </h3>
+        <h1>
+          おしまい
+        </h1>
+        <div class="source">
+          <a href="cucumber.html">「More About Cucumber」へ続く</a>
+        </div>
+      </article>
+
+    </section>
+
+  </body>
+</html>
